@@ -105,7 +105,7 @@ func (c *codeImage) Bounds() image.Rectangle {
 }
 
 func (c *codeImage) At(x, y int) color.Color {
-	if c.Black(x, y) {
+	if c.Black(x/c.Scale-4, y/c.Scale-4) {
 		return blackColor
 	}
 	return whiteColor
