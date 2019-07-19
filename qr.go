@@ -53,19 +53,26 @@ func Encode(text string, level Level) (*Code, error) {
 		}
 	}
 
-	// Build and execute plan.
-	p, err := coding.NewPlan(v, l, 0)
-	if err != nil {
-		return nil, err
-	}
-	cc, err := p.Encode(enc)
-	if err != nil {
-		return nil, err
+	// Pick appropriate mask.
+	var best *coding.Code
+	lowPenalty := int(^uint(0) >> 1)
+	for m := coding.Mask(0); m < 7; m++ {
+		// Build and execute plan.
+		p, err := coding.NewPlan(v, l, m)
+		if err != nil {
+			return nil, err
+		}
+		cc, err := p.Encode(enc)
+		if err != nil {
+			return nil, err
+		}
+		if pen := cc.Penalty(); pen < lowPenalty {
+			best = cc
+			lowPenalty = pen
+		}
 	}
 
-	// TODO: Pick appropriate mask.
-
-	return &Code{cc.Bitmap, cc.Size, cc.Stride, 8}, nil
+	return &Code{best.Bitmap, best.Size, best.Stride, 8}, nil
 }
 
 // A Code is a square pixel grid.
