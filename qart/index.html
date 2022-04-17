@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>QArt Coder</title>
+  <script src="wasm_exec.js"></script>
+  <script type="text/javascript">
+function fetchAndInstantiate(url, importObject) {
+  return fetch(url).then(response =>
+    response.arrayBuffer()
+  ).then(bytes =>
+    WebAssembly.instantiate(bytes, importObject)
+  ).then(results =>
+      results.instance
+  );
+}
+var go = new Go();
+var mod = fetchAndInstantiate("main.wasm", go.importObject);
+window.onload = function() {
+  mod.then(function(instance) {
+    go.run(instance);
+  });
+};
+  </script>
+  <style>
+  .article {
+    display: flex;
+    justify-content: center;
+  }
+  #arrows2 {
+    border-spacing: 0;
+  }
+  #controls {
+  }
+  #output {
+    flex: 250px;
+    flex-grow: 0;
+  }
+  #leftcol {
+    margin-top: 20px;
+  }
+  #wasm1, #wasm2 {
+    display: none;
+  }
+  #img-output {
+    width: 250px;
+    height: 100%;
+  }
+  #help {
+  }
+  #about {
+    margin-top: 2em;
+  }
+  a#left { margin-right: 3px; }
+  a#right { margin-left: 3px; }
+  h1 {
+    text-align: left !important;
+  }
+  </style>
+</head>
+<body>
+  <h1><center>QArt Coder</center></h1>
+  <div class="all">
+  <div class="article">
+  <div id="output">
+  <center id="wasm1">
+  <div id="err-output"></div>
+  <img id="img-output">
+  <br>
+  <a id="img-download" download="qart.png" href="">Download QR Code</a>
+  </center>
+  </div><!-- output -->
+  <div id="leftcol">
+    <div id="loading">
+    Loading WebAssembly...
+    </div>
+    <div id="wasm2">
+    <div id="controls">
+      <div id="urlbox">
+      <label for="url">URL:</label> <input id="url" type="text" size="60" value="https://research.swtch.com/qart">
+      <br>
+      <font size=-1>Tip: Short URLs work best.</font>
+      <br>
+      <br>
+      <input id="upload-input" type="file">
+      <br>
+      <font size=-1>Tip: Small, high contrast images work best.
+      <br>
+      (The image is not uploaded anywhere; this page executes entirely in your browser.)
+      </font>
+      </div>
+      <div id="arrowbox">
+      <table id="arrows">
+        <tr>
+          <td>
+            <table cellspacing=0 cellpadding=0 border=0>
+            <tr><td><td><a style="button" id="up"><img id="arrow-up"><td>
+            <tr><td><a style="button" id="left"><img id="arrow-left"><td><img id="img-src"><td><a style="button" id="right"><img id="arrow-right">
+            <tr><td><td><a style="button" id="down"><img id="arrow-down"><td>
+            </table>
+          <td>
+            <table cellspacing=5 cellpadding=0 border=0>
+            <tr>
+              <td><a style="button" id="smaller"><img id="arrow-smaller">
+              <td>QR Size
+              <td><a style="button" id="bigger"><img id="arrow-bigger">
+
+            <tr>
+              <td><a style="button" id="ismaller"><img id="arrow-ismaller">
+              <td>Image Size
+              <td><a style="button" id="ibigger"><img id="arrow-ibigger">
+            </table>
+
+          <td>
+            <label for="rand">
+              <input type="checkbox" id="rand"></input> Random Pixels
+            </label>
+            <br>
+
+            <label for="data">
+              <input type="checkbox" id="data"></input> Data Pixels Only
+            </label>
+            <br>
+
+            <label for="dither">
+              <input type="checkbox" id="dither"></input> Dither
+            </label>
+            <br>
+
+            <label for="control">
+              <input type="checkbox" id="control"></input> Show Controllable Pixels
+            </label>
+            <br>
+            <br>
+
+            <button id="redraw">Redraw</button>
+            &nbsp; &nbsp;
+            <button id="rotate">Rotate</button>
+      </table>
+
+      <div id="help">
+      Use the blue buttons to move the image within the code<br>
+      and to change the size of the code and the image.<br>
+      <br>
+      Powered by <a href="/qart">QArt Codes</a> and <a href="https://go.dev/wiki/WebAssembly">Go+WebAssembly</a>.
+      </div><!-- help -->
+    </div><!-- controls -->
+    </div><!-- wasm -->
+  </div><!-- leftcol -->
+  </div><!-- article -->
+</body>
+</html>
