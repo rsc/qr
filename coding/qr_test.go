@@ -131,3 +131,43 @@ func TestEncode(t *testing.T) {
 		t.Errorf("have %x want %x", out, check)
 	}
 }
+
+func TestPenalty(t *testing.T) {
+	grid := &Code{
+		// runs of 5, 6, 8, 6 -> 17
+		// 11 2x2 blocks      -> 33
+		// 2 penalty patterns -> 80
+		// 61% black          -> 20
+		Bitmap: []byte{
+			0xe0, // 11100000
+			0xe7, // 11100111
+			0x5c, // 01011100
+			0x79, // 01111001
+			0x5d, // 01011101
+			0xfd, // 11111101
+			0xe4, // 11100100
+			0xe9, // 11101001
+		},
+		Size:   8,
+		Stride: 1,
+	}
+	const (
+		adjacentPenalty   = 17
+		blockPenalty      = 33
+		patternPenalty    = 80
+		proportionPenalty = 20
+	)
+
+	if got := grid.adjacentPenalty(); got != adjacentPenalty {
+		t.Errorf("have adjacent penalty %d want %d", got, adjacentPenalty)
+	}
+	if got := grid.blockPenalty(); got != blockPenalty {
+		t.Errorf("have block penalty %d want %d", got, blockPenalty)
+	}
+	if got := grid.patternPenalty(); got != patternPenalty {
+		t.Errorf("have pattern penalty %d want %d", got, patternPenalty)
+	}
+	if got := grid.proportionPenalty(); got != proportionPenalty {
+		t.Errorf("have proportion penalty %d want %d", got, proportionPenalty)
+	}
+}

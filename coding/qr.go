@@ -318,6 +318,121 @@ func (c *Code) Black(x, y int) bool {
 		c.Bitmap[y*c.Stride+x/8]&(1<<uint(7-x&7)) != 0
 }
 
+// Penalty returns the scoring penalty of a pixel grid.
+func (c *Code) Penalty() int {
+	return c.adjacentPenalty() + c.blockPenalty() + c.patternPenalty() + c.proportionPenalty()
+}
+
+// adjacentPenalty penalizes adjacent modules of the
+// same color in a row/column.
+func (c *Code) adjacentPenalty() int {
+	const n1 = 3
+	var p int
+	for y := 0; y < c.Size; y++ {
+		last := c.Black(0, y)
+		bs := 0
+		for x := 1; x < c.Size; x++ {
+			b := c.Black(x, y)
+			if b != last {
+				if n := x - bs; n >= 5 {
+					p += n1 + (n - 5)
+				}
+				bs = x
+			}
+			last = b
+		}
+		if n := c.Size - bs; n >= 5 {
+			p += n1 + (n - 5)
+		}
+	}
+	for x := 0; x < c.Size; x++ {
+		last := c.Black(x, 0)
+		bs := 0
+		for y := 1; y < c.Size; y++ {
+			b := c.Black(x, y)
+			if b != last {
+				if n := y - bs; n >= 5 {
+					p += n1 + (n - 5)
+				}
+				bs = y
+			}
+			last = b
+		}
+		if n := c.Size - bs; n >= 5 {
+			p += n1 + (n - 5)
+		}
+	}
+	return p
+}
+
+// blockPenalty penalizes blocks of modules in the same color.
+func (c *Code) blockPenalty() int {
+	const n2 = 3
+	var n int
+	for x := 0; x < c.Size-1; x++ {
+		for y := 0; y < c.Size-1; y++ {
+			// The spec does not specify how to
+			// count overlapping blocks, so just
+			// count all 2x2 blocks.
+			tl := c.Black(x, y)
+			if tl == c.Black(x+1, y) && tl == c.Black(x, y+1) && tl == c.Black(x+1, y+1) {
+				n++
+			}
+		}
+	}
+	return n * n2
+}
+
+// patternPenalty penalizes the 1:1:3:1:1 ratio
+// (dark:light:dark:light:dark) pattern in row/column.
+func (c *Code) patternPenalty() int {
+	const n3 = 40
+	pattern := []bool{true, false, true, true, true, false, true}
+	var n int
+	for y := 0; y < c.Size; y++ {
+	row:
+		for x := 0; x <= c.Size-7; x++ {
+			for i, d := range pattern {
+				if c.Black(x+i, y) != d {
+					continue row
+				}
+			}
+			n++
+		}
+	}
+	for x := 0; x < c.Size; x++ {
+	col:
+		for y := 0; y <= c.Size-7; y++ {
+			for i, d := range pattern {
+				if c.Black(x, y+i) != d {
+					continue col
+				}
+			}
+			n++
+		}
+	}
+	return n * n3
+}
+
+// proportionPenalty penalizes non-equal proportion
+// of dark modules in the whole symbol.
+func (c *Code) proportionPenalty() int {
+	const n4 = 10
+	var black int
+	for x := 0; x < c.Size; x++ {
+		for y := 0; y < c.Size; y++ {
+			if c.Black(x, y) {
+				black++
+			}
+		}
+	}
+	d := 10 - (20*black)/(c.Size*c.Size)
+	if d < 0 {
+		d = -d
+	}
+	return n4 * d
+}
+
 // A Mask describes a mask that is applied to the QR
 // code to avoid QR artifacts being interpreted as
 // alignment and timing patterns (such as the squares
